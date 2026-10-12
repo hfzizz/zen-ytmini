@@ -2,7 +2,7 @@
 // @name           YT Mini Player for Zen
 // @description    Adds Search and Queue from the YT Mini Player extension to Zen's media card.
 // @author         hfzizz
-// @version        0.2.1
+// @version        0.2.2
 // @include        main
 // ==/UserScript==
 
@@ -87,11 +87,16 @@
   border-bottom: 1px solid color-mix(in srgb, currentColor 14%, transparent);
 }
 .ytmini-zen-slot > browser { min-height: 0; background: transparent; }
-/* Zen gives the media bar a fixed height and lets cards overflow upwards; while
-   our panel is open let the bar grow so it pushes the tab list up instead of
-   covering it. */
+/* Zen gives the media bar a fixed height and stacks the cards on top of each
+   other, fanning them out upwards over the tab list on hover. While our panel
+   is open let the bar grow so it pushes the tab list up instead of covering it,
+   and lay the stack out flat like on hover: otherwise the cards behind slide
+   down behind the (now much taller) open card and leave an empty gap above it. */
 #zen-media-controls-toolbar:has(.zen-media-card[ytmini-open]) { height: auto !important; }
-.zen-media-card[ytmini-open] { transform: none !important; opacity: 1 !important; }
+#zen-media-controls-toolbar:has(.zen-media-card[ytmini-open]) .zen-media-card:not([zen-removing], [zen-hiding]) {
+  transform: none !important;
+  opacity: 1 !important;
+}
 /* Keep the title / progress rows visible while the panel is open (Zen shows them on hover). */
 .zen-media-card[ytmini-open] .show-on-hover {
   max-height: 50px !important;
@@ -196,6 +201,30 @@
     group.setAttribute('class', `ytmini-zen-buttons ytmini-zen-buttons-${where}`);
     group.append(makeButton('search', 'Search YouTube'), makeButton('queue', 'Queue'));
     return group;
+  }
+
+  const guardedSlots = new WeakSet();
+
+  // Zen switches to the card's tab on any mousedown in the card that isn't on a
+  // button. Keep clicks inside our panel (search results, queue items) from
+  // reaching it, or every click would jump to the YouTube tab, which in turn
+  // hides the card. Cards are cloned from the template, which doesn't copy
+  // listeners, so this runs for every card.
+  function guardSlot(card) {
+    const slot = card.querySelector('.ytmini-zen-slot');
+    if (!slot || guardedSlots.has(slot)) return;
+    guardedSlots.add(slot);
+    slot.addEventListener('mousedown', (e) => e.stopPropagation());
+  }
+
+  // Zen hides a card while its own tab is selected. Close our panel when that
+  // happens: Zen measures the front card when the bar reappears and keeps that
+  // as the bar's height, so a card that came back open would leave the bar
+  // ~330px tall (covering the tab list) once the panel was closed.
+  function closeIfHidden(card) {
+    if (card.hasAttribute(OPEN_ATTR) && (card.hidden || card.hasAttribute('zen-hiding') || card.hasAttribute('zen-removing'))) {
+      closeCard(card);
+    }
   }
 
   // Adds our buttons + panel slot to a card (or to the card template). The
@@ -304,14 +333,35 @@
     if (!toolbar || !template) return false;
 
     patch(template.content);
-    for (const card of toolbar.querySelectorAll('.zen-media-card')) patch(card);
+    for (const card of toolbar.querySelectorAll('.zen-media-card')) {
+      patch(card);
+      guardSlot(card);
+    }
     new MutationObserver((mutations) => {
       for (const m of mutations) {
+        if (m.type === 'attributes') {
+          if (m.target === toolbar) {
+            if (toolbar.hidden) {
+              for (const card of toolbar.querySelectorAll(`.zen-media-card[${OPEN_ATTR}]`)) closeCard(card);
+            }
+          } else if (m.target.classList.contains('zen-media-card')) {
+            closeIfHidden(m.target);
+          }
+          continue;
+        }
         for (const n of m.addedNodes) {
-          if (n.nodeType === 1 && n.classList.contains('zen-media-card')) patch(n);
+          if (n.nodeType === 1 && n.classList.contains('zen-media-card')) {
+            patch(n);
+            guardSlot(n);
+          }
         }
       }
-    }).observe(toolbar, { childList: true, subtree: true });
+    }).observe(toolbar, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['hidden', 'zen-hiding', 'zen-removing'],
+    });
 
     // Capture phase: handle our buttons before Zen's card handler sees the event.
     toolbar.addEventListener('command', onCommand, true);
