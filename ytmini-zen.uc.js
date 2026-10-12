@@ -2,7 +2,7 @@
 // @name           YT Mini Player for Zen
 // @description    Adds Search and Queue from the YT Mini Player extension to Zen's media card.
 // @author         hfzizz
-// @version        0.2.0
+// @version        0.2.1
 // @include        main
 // ==/UserScript==
 
@@ -56,6 +56,28 @@
   border-radius: 6px;
 }
 #zen-media-controls-toolbar[ytmini-missing] .ytmini-zen-buttons { display: none; }
+/* Narrow sidebars. The controls row doesn't wrap and its buttons are a fixed
+   26px, so our two extra buttons push it out of the card. Measured against the
+   card's inner width: below 220px drop Zen's artwork/focus button (Zen itself
+   does this below 165px) and tighten the gaps; below 172px move our buttons up
+   to the title row, next to PiP / close. */
+.zen-media-main-vbox { container: ytmini-card / inline-size; }
+.ytmini-zen-buttons-top { display: none; }
+@container ytmini-card (min-width: 172px) and (max-width: 219px) {
+  .zen-media-controls-hbox:has(.ytmini-zen-buttons-row) { gap: 0.4rem; }
+  .zen-media-card:not([media-sharing]) .zen-media-controls-hbox:has(.ytmini-zen-buttons-row) .zen-media-focus-button {
+    display: none;
+  }
+}
+@container ytmini-card (max-width: 171px) {
+  .ytmini-zen-buttons-top { display: flex; }
+  .zen-media-card:has(.ytmini-zen-buttons-top) .ytmini-zen-buttons-row { display: none; }
+  .zen-media-info-container:has(.ytmini-zen-buttons-top) .zen-media-info-vbox {
+    width: auto !important;
+    flex: 1 1 0 !important;
+    min-width: 1px;
+  }
+}
 .ytmini-zen-slot { height: 0; overflow: hidden; opacity: 0; transition: height 0.18s ease, opacity 0.18s ease; }
 .zen-media-card[ytmini-open] .ytmini-zen-slot {
   height: 330px;
@@ -169,17 +191,25 @@
     return b;
   }
 
-  // Adds our buttons + panel slot to a card (or to the card template).
+  function makeGroup(where) {
+    const group = document.createXULElement('hbox');
+    group.setAttribute('class', `ytmini-zen-buttons ytmini-zen-buttons-${where}`);
+    group.append(makeButton('search', 'Search YouTube'), makeButton('queue', 'Queue'));
+    return group;
+  }
+
+  // Adds our buttons + panel slot to a card (or to the card template). The
+  // buttons go in the controls row; a second copy sits in the title row (next
+  // to PiP / close) and CSS shows it instead when the sidebar is too narrow.
   function patch(root) {
     try {
       const controls = root.querySelector('.zen-media-controls-hbox');
       const main = root.querySelector('.zen-media-main-vbox');
       if (!controls || !main || controls.querySelector('.ytmini-zen-search')) return;
-      const group = document.createXULElement('hbox');
-      group.setAttribute('class', 'ytmini-zen-buttons');
-      group.append(makeButton('search', 'Search YouTube'), makeButton('queue', 'Queue'));
       const mute = controls.querySelector('.zen-media-mute-button');
-      controls.insertBefore(group, mute ? mute.nextSibling : null);
+      controls.insertBefore(makeGroup('row'), mute ? mute.nextSibling : null);
+      const topButtons = root.querySelector('.zen-media-info-container .zen-media-buttons-hbox');
+      if (topButtons) topButtons.insertBefore(makeGroup('top'), topButtons.firstChild);
       const slot = document.createXULElement('vbox');
       slot.setAttribute('class', 'ytmini-zen-slot');
       main.insertBefore(slot, main.firstChild);
