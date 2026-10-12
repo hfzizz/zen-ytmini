@@ -48,11 +48,16 @@
   border-bottom: 1px solid color-mix(in srgb, currentColor 14%, transparent);
 }
 .ytmini-zen-slot > browser { min-height: 0; background: transparent; }
-/* Zen gives the media bar a fixed height and lets cards overflow upwards; while
-   our panel is open let the bar grow so it pushes the tab list up instead of
-   covering it. */
+/* Zen gives the media bar a fixed height and stacks the cards on top of each
+   other, fanning them out upwards over the tab list on hover. While our panel
+   is open let the bar grow so it pushes the tab list up instead of covering it,
+   and lay the stack out flat like on hover: otherwise the cards behind slide
+   down behind the (now much taller) open card and leave an empty gap above it. */
 #zen-media-controls-toolbar:has(.zen-media-card[ytmini-open]) { height: auto !important; }
-.zen-media-card[ytmini-open] { transform: none !important; opacity: 1 !important; }
+#zen-media-controls-toolbar:has(.zen-media-card[ytmini-open]) .zen-media-card:not([zen-removing], [zen-hiding]) {
+  transform: none !important;
+  opacity: 1 !important;
+}
 /* Keep the title / progress rows visible while the panel is open (Zen shows them on hover). */
 .zen-media-card[ytmini-open] .show-on-hover {
   max-height: 50px !important;
