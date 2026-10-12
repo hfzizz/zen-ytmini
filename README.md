@@ -43,7 +43,7 @@ Open the **Browser Console** (Ctrl+Shift+J, or ⌘⇧J on macOS) and type `YT Mi
 
 | Message | Meaning |
 | --- | --- |
-| `YT Mini (Zen mod) loaded` | The mod is running. |
+| `YT Mini (Zen mod) loaded (v0.2.2)` | The mod is running. The version should match `theme.json`; if it is older, update the mod in Sine and restart Zen. |
 | *(nothing at all)* | Sine didn't run the script. Check that JS mods from unofficial sources are enabled, then reinstall the mod and restart. |
 | `extension yt-mini-player@hfzizz not found or disabled` | Install or enable the YT Mini Player extension. |
 | `could not embed the extension page` | The panel can't be shown inside the card in this Zen version. The buttons then open the player in a tab instead. Please open an issue with the full error. |

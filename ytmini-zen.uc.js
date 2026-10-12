@@ -18,7 +18,7 @@
 // the Media Session API.
 //
 // Troubleshooting: open the Browser Console (Ctrl+Shift+J) and filter for
-// "YT Mini". On startup this script logs "YT Mini (Zen mod) loaded".
+// "YT Mini". On startup this script logs "YT Mini (Zen mod) loaded (v<version>)".
 
 (function () {
   'use strict';
@@ -35,6 +35,7 @@
   const POLICY_POLL_MS = 3000;
   const FIND_TOOLBAR_TRIES = 60; // x 250ms = 15s
   const STYLE_ID = 'ytmini-zen-style';
+  const VERSION = '0.2.2'; // keep in sync with theme.json
 
   // Same rules as userChrome.css. Injected by the script too, so the mod works
   // even if the mod manager doesn't load the stylesheet.
@@ -387,7 +388,7 @@
       // Zen's media controls may be created a little after the window loads.
       for (let i = 0; i < FIND_TOOLBAR_TRIES; i++) {
         if (init()) {
-          console.info(LOG.replace(':', ''), 'loaded');
+          console.info(LOG.replace(':', ''), `loaded (v${VERSION})`);
           return;
         }
         await new Promise((r) => setTimeout(r, 250));
