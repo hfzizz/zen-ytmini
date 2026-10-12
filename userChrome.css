@@ -1,6 +1,5 @@
 /* YT Mini Player for Zen: styles for the Search / Queue buttons and the panel
    added to Zen's media card. The script also injects these rules itself. */
-
 .ytmini-zen-buttons { align-items: center; }
 .ytmini-zen-search, .ytmini-zen-queue {
   list-style-image: var(--ytmini-icon);
@@ -18,6 +17,28 @@
   border-radius: 6px;
 }
 #zen-media-controls-toolbar[ytmini-missing] .ytmini-zen-buttons { display: none; }
+/* Narrow sidebars. The controls row doesn't wrap and its buttons are a fixed
+   26px, so our two extra buttons push it out of the card. Measured against the
+   card's inner width: below 220px drop Zen's artwork/focus button (Zen itself
+   does this below 165px) and tighten the gaps; below 172px move our buttons up
+   to the title row, next to PiP / close. */
+.zen-media-main-vbox { container: ytmini-card / inline-size; }
+.ytmini-zen-buttons-top { display: none; }
+@container ytmini-card (min-width: 172px) and (max-width: 219px) {
+  .zen-media-controls-hbox:has(.ytmini-zen-buttons-row) { gap: 0.4rem; }
+  .zen-media-card:not([media-sharing]) .zen-media-controls-hbox:has(.ytmini-zen-buttons-row) .zen-media-focus-button {
+    display: none;
+  }
+}
+@container ytmini-card (max-width: 171px) {
+  .ytmini-zen-buttons-top { display: flex; }
+  .zen-media-card:has(.ytmini-zen-buttons-top) .ytmini-zen-buttons-row { display: none; }
+  .zen-media-info-container:has(.ytmini-zen-buttons-top) .zen-media-info-vbox {
+    width: auto !important;
+    flex: 1 1 0 !important;
+    min-width: 1px;
+  }
+}
 .ytmini-zen-slot { height: 0; overflow: hidden; opacity: 0; transition: height 0.18s ease, opacity 0.18s ease; }
 .zen-media-card[ytmini-open] .ytmini-zen-slot {
   height: 330px;
