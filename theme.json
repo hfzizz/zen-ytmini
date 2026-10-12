@@ -1,0 +1,21 @@
+{
+  "id": "ytmini-zen",
+  "name": "YT Mini Player for Zen",
+  "description": "Adds YouTube search and your own queue to Zen's media card. Requires the YT Mini Player extension (github.com/hfzizz/YTPlayer).",
+  "homepage": "https://github.com/hfzizz/zen-ytmini",
+  "style": {
+    "chrome": "userChrome.css"
+  },
+  "scripts": {
+    "ytmini-zen.uc.js": {
+      "include": ["chrome://browser/content/browser.xhtml"]
+    }
+  },
+  "readme": "README.md",
+  "author": "hfzizz",
+  "version": "0.2.0",
+  "tags": ["media", "youtube", "music", "queue"],
+  "createdAt": "2026-10-12",
+  "updatedAt": "2026-10-12",
+  "fork": ["zen"]
+}
